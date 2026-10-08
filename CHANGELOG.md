@@ -5,6 +5,18 @@ Entries under **Unreleased** describe development changes awaiting a release.
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-10-08
+
+### Changed
+
+- Move maintained development and releases to the independent, non-fork
+  repository `corapoid/homeassistant-thesslagreen`.
+- Update HACS installation, documentation, issue-tracker and release URLs.
+- Preserve commit history, earlier tags and the original v0.3.0 release assets;
+  keep the `thessla_green` integration domain and entity identifiers.
+- Document migration from the previous HACS repository and credit the original
+  project contributors.
+
 ## [0.3.0] - 2026-10-08
 
 ### Added
@@ -93,5 +105,6 @@ Entries under **Unreleased** describe development changes awaiting a release.
 - Physical-device verification is pending; tests exercise simulated gateways
   and real Home Assistant registry/coordinator APIs.
 
-[Unreleased]: https://github.com/corapoid/ThesslaGreen_HA/compare/v0.3.0...HEAD
-[0.3.0]: https://github.com/corapoid/ThesslaGreen_HA/compare/5bae9f4...v0.3.0
+[Unreleased]: https://github.com/corapoid/homeassistant-thesslagreen/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/corapoid/homeassistant-thesslagreen/compare/v0.3.0...v0.3.1
+[0.3.0]: https://github.com/corapoid/homeassistant-thesslagreen/compare/5bae9f4...v0.3.0

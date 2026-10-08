@@ -4,10 +4,10 @@
   "codeowners": ["@aLAN-LDZ", "@corapoid"],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://github.com/corapoid/ThesslaGreen_HA/tree/v0.3.0",
+  "documentation": "https://github.com/corapoid/homeassistant-thesslagreen/tree/v0.3.1",
   "integration_type": "hub",
   "iot_class": "local_polling",
-  "issue_tracker": "https://github.com/corapoid/ThesslaGreen_HA/issues",
+  "issue_tracker": "https://github.com/corapoid/homeassistant-thesslagreen/issues",
   "requirements": ["pymodbus>=3.11.2,<4.0"],
-  "version": "0.3.0"
+  "version": "0.3.1"
 }

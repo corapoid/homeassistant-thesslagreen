@@ -35,7 +35,7 @@ duct heaters and AFC depends on the installation.
 
 ### HACS
 
-1. Add `https://github.com/corapoid/ThesslaGreen_HA` as a HACS custom repository
+1. Add `https://github.com/corapoid/homeassistant-thesslagreen` as a HACS custom repository
    in the **Integration** category.
 2. Install **Thessla Green**.
 3. Restart Home Assistant.
@@ -47,7 +47,7 @@ duct heaters and AFC depends on the installation.
 1. Download or clone the repository:
 
    ```bash
-   git clone --branch v0.3.0 https://github.com/corapoid/ThesslaGreen_HA.git
+   git clone --branch v0.3.1 https://github.com/corapoid/homeassistant-thesslagreen.git
    ```
 
 2. Copy **only** `custom_components/thessla_green` from the repository into your
@@ -71,6 +71,13 @@ Update the integration and restart HA. For **AirPack4 300h**, select
 options. Saving options automatically reloads the integration.
 
 Add Particle+ as a **separate integration entry** with its own slave ID.
+
+### Moving from the previous repository
+
+Development now takes place in the independent **homeassistant-thesslagreen**
+repository. Replace the previous HACS repository URL with the URL above and
+install the current release. HA still uses the `thessla_green` domain and the
+existing entity identifiers, so retain the configured integration entry.
 
 ## AirPack4 300h
 
@@ -222,15 +229,15 @@ pymodbus client. CI checks minimum and current dependency versions.
 
 ## Project status and references
 
-Current release: **v0.3.0**. The release page provides the integration archive
+Current release: **v0.3.1**. The release page provides the integration archive
 and `SHA256SUMS`. Documentation and release files come from the same tag.
 
 Changes awaiting publication are marked **Unreleased** in [CHANGELOG.md](CHANGELOG.md).
 Physical-device verification is pending; profile coverage is based on manufacturer
 documentation and automated tests.
 
-- [Integration releases](https://github.com/corapoid/ThesslaGreen_HA/releases)
-- [Issue tracker](https://github.com/corapoid/ThesslaGreen_HA/issues)
+- [Integration releases](https://github.com/corapoid/homeassistant-thesslagreen/releases)
+- [Issue tracker](https://github.com/corapoid/homeassistant-thesslagreen/issues)
 - [AirPack4 Modbus protocol](https://thesslagreen.com/wp-content/uploads/MODBUS_USER_AirPack_4_10.2022.01.pdf)
 - [Particle+ Modbus protocol](https://thesslagreen.com/wp-content/uploads/MODBUS_USER_Particle_08.2021.01.pdf)
 
@@ -241,13 +248,17 @@ programming and Modbus-port configuration are outside its scope.
 
 The project is distributed under the [MIT license](LICENSE).
 
+Project history and author contributions originate from
+[aLAN-LDZ's ThesslaGreen_HA](https://github.com/aLAN-LDZ/ThesslaGreen_HA).
+The independent repository preserves that history and its earlier tags.
+
 ### Publishing a release
 
 The manifest version and a changelog section must match the `vX.Y.Z` tag.
 Build and validate release artifacts locally with:
 
 ```bash
-python scripts/build_release.py v0.3.0 --output-dir dist
+python scripts/build_release.py v0.3.1 --output-dir dist
 ```
 
 Pushing a tag runs the **Release** workflow. Tests and HACS/hassfest validation

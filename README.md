@@ -38,7 +38,7 @@ np. GWC, nagrzewnic czy AFC, zależy od instalacji.
 ### Przez HACS
 
 1. Otwórz HACS i dodaj repozytorium
-   `https://github.com/corapoid/ThesslaGreen_HA` jako repozytorium niestandardowe
+   `https://github.com/corapoid/homeassistant-thesslagreen` jako repozytorium niestandardowe
    kategorii **Integracja**.
 2. Zainstaluj **Thessla Green**.
 3. Zrestartuj Home Assistant.
@@ -50,7 +50,7 @@ np. GWC, nagrzewnic czy AFC, zależy od instalacji.
 1. Pobierz repozytorium lub sklonuj je:
 
    ```bash
-   git clone --branch v0.3.0 https://github.com/corapoid/ThesslaGreen_HA.git
+   git clone --branch v0.3.1 https://github.com/corapoid/homeassistant-thesslagreen.git
    ```
 
 2. Skopiuj **wyłącznie** katalog `custom_components/thessla_green` z repozytorium
@@ -74,6 +74,13 @@ istniejącego wpisu i ustaw **Model rekuperatora → AirPack4 300h**. Zapis opcj
 automatycznie przeładuje integrację.
 
 Particle+ dodaj jako **osobny wpis integracji**, z jego własnym slave ID.
+
+### Przejście z poprzedniego repozytorium
+
+Projekt jest rozwijany w niezależnym repozytorium **homeassistant-thesslagreen**.
+W HACS zastąp poprzedni adres repozytorium adresem podanym powyżej i zainstaluj
+aktualne wydanie. Konfiguracja HA nadal używa domeny `thessla_green` oraz tych
+samych identyfikatorów encji, więc zachowaj istniejący wpis integracji.
 
 ## AirPack4 300h
 
@@ -228,15 +235,15 @@ przez rzeczywistego klienta pymodbus. CI sprawdza minimalne i aktualne wersje za
 
 ## Status projektu i źródła
 
-Aktualne wydanie: **v0.3.0**. Archiwum integracji i plik `SHA256SUMS` są dostępne
+Aktualne wydanie: **v0.3.1**. Archiwum integracji i plik `SHA256SUMS` są dostępne
 na stronie wydania. Dokumentacja i pliki wydania pochodzą z tego samego tagu.
 
 Zmiany oczekujące na publikację są oznaczone jako **Unreleased** w
 [CHANGELOG.md](CHANGELOG.md). Weryfikacja na fizycznych urządzeniach pozostaje
 do wykonania; zakres profili opiera się na dokumentacji producenta i testach automatycznych.
 
-- [Wydania integracji](https://github.com/corapoid/ThesslaGreen_HA/releases)
-- [Zgłoszenia błędów](https://github.com/corapoid/ThesslaGreen_HA/issues)
+- [Wydania integracji](https://github.com/corapoid/homeassistant-thesslagreen/releases)
+- [Zgłoszenia błędów](https://github.com/corapoid/homeassistant-thesslagreen/issues)
 - [Protokół Modbus AirPack4](https://thesslagreen.com/wp-content/uploads/MODBUS_USER_AirPack_4_10.2022.01.pdf)
 - [Protokół Modbus Particle+](https://thesslagreen.com/wp-content/uploads/MODBUS_USER_Particle_08.2021.01.pdf)
 
@@ -247,13 +254,17 @@ produktu i zmiana parametrów portów Modbus pozostają poza jego zakresem.
 
 Projekt jest udostępniany na [licencji MIT](LICENSE).
 
+Historia projektu i wkład autorów pochodzą z
+[ThesslaGreen_HA autorstwa aLAN-LDZ](https://github.com/aLAN-LDZ/ThesslaGreen_HA).
+Niezależne repozytorium zachowuje tę historię oraz wcześniejsze tagi.
+
 ### Publikowanie wydania
 
 Wersja w `manifest.json` i sekcja w changelogu muszą odpowiadać tagowi `vX.Y.Z`.
 Lokalne pakowanie i kontrolę wersji wykonasz poleceniem:
 
 ```bash
-python scripts/build_release.py v0.3.0 --output-dir dist
+python scripts/build_release.py v0.3.1 --output-dir dist
 ```
 
 Wypchnięcie tagu uruchamia workflow **Release**. Po przejściu testów i walidacji
