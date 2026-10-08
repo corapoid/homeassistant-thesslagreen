@@ -5,6 +5,21 @@ Entries under **Unreleased** describe development changes awaiting a release.
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-08
+
+### Added
+
+- Particle+ filter-check command (register 42 = 3), automatic check weekday/time,
+  explicit message acknowledgement and higher-resistance filter YES/NO decisions.
+- Complete decoding of the documented `slave_screen` messages at register 4398,
+  preserving unknown raw codes and independent S116 state after check completion.
+- Individual Particle+ alarm codes, active-alarm descriptions, firmware/serial
+  information, warning/error/work-permission flags and read-only UART parameters.
+- Raw Particle+ RTC, alarm-record, compilation and controller-name diagnostics;
+  firmware-gated optional reads and five-minute alarm-record caching.
+- A fresh-process HA discovery/config-flow regression test and direct setup links
+  for diagnosing frontend integration-list caching.
+
 ## [0.3.1] - 2026-10-08
 
 ### Changed
@@ -105,6 +120,7 @@ Entries under **Unreleased** describe development changes awaiting a release.
 - Physical-device verification is pending; tests exercise simulated gateways
   and real Home Assistant registry/coordinator APIs.
 
-[Unreleased]: https://github.com/corapoid/homeassistant-thesslagreen/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/corapoid/homeassistant-thesslagreen/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/corapoid/homeassistant-thesslagreen/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/corapoid/homeassistant-thesslagreen/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/corapoid/homeassistant-thesslagreen/compare/5bae9f4...v0.3.0

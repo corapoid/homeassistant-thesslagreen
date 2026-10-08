@@ -32,6 +32,8 @@ async def test_particle_requests(client):
     assert {(call["address"], call["count"]) for call in requests} == {
         (16, 2), (33, 1), (36, 1), (41, 1), (48, 1), (50, 5),
         (56, 2), (64, 2), (96, 1), (4114, 2), (8131, 1),
+        (0, 4), (42, 3), (55, 1), (97, 1), (112, 10), (4398, 3), (8128, 3), (8144, 1),
+        (1536, 16), (1552, 16), (1568, 16), (1584, 16),
     }
     assert all(call["device_id"] == 30 and call["count"] <= 16 for call in requests)
     assert data.holding[17] == 1
@@ -60,6 +62,57 @@ async def test_particle_alarm_register_depends_on_firmware(client, firmware, ext
     assert (98 in data.holding) == extended
     if extended:
         assert data.holding[98] == 4
+    requests = client.read_holding_registers.await_args_list
+    assert any(call.kwargs["address"] == 8132 for call in requests) == extended
+    assert any(call.kwargs["address"] == 1600 for call in requests) == extended
+
+
+@pytest.mark.asyncio
+async def test_particle_optional_message_failure_and_rtc_snapshot(client):
+    reads = []
+
+    def response(**kwargs):
+        start, count = kwargs["address"], kwargs["count"]
+        reads.append((start, count))
+        if start == 0 or start <= 4398 < start + count:
+            return SimpleNamespace(isError=lambda: True, exception_code=2)
+        return SimpleNamespace(isError=lambda: False, registers=[0] * count)
+
+    client.read_holding_registers.side_effect = response
+    controller = ThesslaGreenModbusController("gateway", 502, 30, device_type="particle")
+    data = await controller.fetch_data()
+    assert 4398 not in data.holding and data.holding[4399] == 0
+    assert (0, 4) in reads and (0, 1) not in reads
+    assert all(address not in data.holding for address in range(4))
+    reads.clear()
+    await controller.fetch_data()
+    assert not any(start in (0, 4398) for start, count in reads)
+
+
+@pytest.mark.asyncio
+async def test_particle_optional_device_failure_is_not_ignored(client):
+    def response(**kwargs):
+        if kwargs["address"] == 4398:
+            return SimpleNamespace(isError=lambda: True, exception_code=4)
+        return SimpleNamespace(isError=lambda: False, registers=[0] * kwargs["count"])
+
+    client.read_holding_registers.side_effect = response
+    with pytest.raises(ControllerException):
+        await ThesslaGreenModbusController("gateway", 502, 30, device_type="particle").fetch_data()
+
+
+@pytest.mark.asyncio
+async def test_particle_history_cache_refreshes_after_command(client):
+    controller = ThesslaGreenModbusController("gateway", 502, 30, device_type="particle")
+    await controller.fetch_data()
+    client.read_holding_registers.reset_mock()
+    await controller.fetch_data()
+    assert not any(1536 <= call.kwargs["address"] <= 1611
+                   for call in client.read_holding_registers.await_args_list)
+    await controller.write_register(42, 3)
+    client.read_holding_registers.reset_mock()
+    await controller.fetch_data()
+    assert any(call.kwargs["address"] == 1536 for call in client.read_holding_registers.await_args_list)
 
 
 def test_legacy_profile(client):

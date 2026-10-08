@@ -50,8 +50,8 @@ async def test_particle_options_do_not_require_power():
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("platform,particle_count,legacy_count", [
-    ("sensor", 8, 13), ("binary_sensor", 7, 15), ("switch", 1, 3),
-    ("select", 3, 4), ("number", 4, 1),
+    ("sensor", 45, 13), ("binary_sensor", 26, 15), ("switch", 1, 3),
+    ("select", 5, 4), ("number", 4, 1),
 ])
 @pytest.mark.parametrize("particle", [False, True])
 async def test_platform_routes_to_correct_entities(platform, particle_count, legacy_count, particle):

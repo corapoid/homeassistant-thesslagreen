@@ -45,12 +45,18 @@ np. GWC, nagrzewnic czy AFC, zależy od instalacji.
 4. Przejdź do **Ustawienia → Urządzenia i usługi → Dodaj integrację**.
 5. Wyszukaj **Thessla Green**, wybierz profil i podaj dane połączenia.
 
+Możesz też otworzyć [formularz dodawania Thessla Green](https://my.home-assistant.io/redirect/config_flow_start/?domain=thessla_green)
+bezpośrednio. Jeśli po restarcie nie widzisz pozycji na liście, odśwież interfejs
+przeglądarki z pominięciem pamięci podręcznej (`Ctrl+Shift+R` lub `Cmd+Shift+R`).
+W aplikacji mobilnej zamknij ją i otwórz ponownie, a w razie potrzeby wyczyść
+pamięć podręczną interfejsu. Nazwa na liście to **Thessla Green**, nie nazwa repozytorium.
+
 ### Ręcznie
 
 1. Pobierz repozytorium lub sklonuj je:
 
    ```bash
-   git clone --branch v0.3.1 https://github.com/corapoid/homeassistant-thesslagreen.git
+   git clone --branch v0.4.0 https://github.com/corapoid/homeassistant-thesslagreen.git
    ```
 
 2. Skopiuj **wyłącznie** katalog `custom_components/thessla_green` z repozytorium
@@ -164,6 +170,11 @@ Obsługiwane są:
 - nastawa bezwzględna **0–200 µg/m³** i stężenia odniesienia **10–300 µg/m³**;
 - spadek ciśnienia, zużycie filtrów, wstrzymanie filtracji i alarmy;
 - od firmware **3.4.0** także brak zezwolenia na pracę oraz brak filtrów.
+- komunikat panelu `slave_screen`, kod komunikatu i stan procedury filtrów;
+- osobne kody alarmów, w tym **S116**, oraz zbiorczą listę aktywnych alarmów;
+- rzeczywistą wersję sterownika, numer seryjny i parametry portów RTU;
+- odczyt nastawy względnej z panelu, rejestrów zegara, rejestracji alarmów
+  oraz surowych rejestrów nazwy urządzenia i kompilacji oprogramowania.
 
 Czujniki pokazują **wybrany rodzaj pyłu**, wskazany atrybutem `particle_type`.
 Domyślne pomiary urządzenia odbywają się co **10 sekund** w trybie automatycznym
@@ -172,6 +183,44 @@ Odświeżanie integracji nie przyspiesza tych pomiarów.
 
 Procentową nastawę regulacji względnej ustawia się na panelu Particle+.
 Tryb automatyczny może być niedostępny przy awarii PmSensor OUT.
+
+### Kontrola filtrów i komunikaty Particle+
+
+Przycisk **Particle+ Uruchom kontrolę filtrów** zapisuje wartość **3** do rejestru
+**42 / 0x002A**. Nie wymaga kodu serwisowego. Jest niedostępny podczas trwającej
+kontroli lub kalibracji. Dzień i godzinę automatycznej kontroli ustawisz osobnymi
+encjami; w Particle+ godzina i minuta są dwoma polami bajtowymi rejestru 44.
+
+Wynik obserwuj w sensorach **Particle+ Komunikat kontroli filtrów** i
+**Particle+ Kod komunikatu filtrów** — odczytują rejestr **4398 / 0x112E**:
+
+| Kod | Znaczenie |
+| --- | --- |
+| `0x31` | Wykryto nowy filtr HEPA |
+| `0x39` | Opór HEPA jest większy niż oryginalnego; wymagana decyzja TAK/NIE |
+| `0x43` | Trwa kontrola filtrów |
+| `0x47` | Błąd przepływu podczas kontroli filtrów |
+| `0x48` | Procedura kontroli została zakończona |
+| `0x4A` | Nie można uruchomić kontroli; sprawdź alarmy |
+
+Integracja rozpoznaje wszystkie komunikaty wymienione w protokole. Dla nieznanego
+kodu zachowuje surową wartość, zamiast przypisywać mu wynik kontroli.
+Komunikat zakończenia **nie oznacza automatycznie skasowania S116** — jego stan
+jest pokazany w osobnej encji **Particle+ S116 — Konieczna wymiana filtra HEPA**.
+
+Odczyt nie kasuje komunikatów. Przycisk **Potwierdź komunikat filtrów** wykonuje
+jawny zapis `0` do `4398`; następny komunikat kolejki zostanie odczytany ponownie.
+Pytania o zwiększony opór wymagają użycia osobnego przycisku **TAK** lub **NIE**,
+który zapisuje decyzję do `4400 / 0x1130`. Krytycznych komunikatów o braku lub
+nieprawidłowym filtrze nie można potwierdzić tym przyciskiem.
+
+Resety użytkownika dotyczą tylko S2 i S255. S116 jest alarmem resetowanym przez
+sterownik automatycznie i nie ma przycisku wymuszającego jego skasowanie.
+Szczegółowe rejestracje alarmów i parametry UART są domyślnie wyłączone w HA;
+włącz potrzebne encje na karcie urządzenia. Spakowane daty historii, zegar i
+rejestry kompilacji są dostępne jako dane surowe, z opisem pól, bez zgadywania
+niedookreślonego w protokole kodowania dat. Rejestracje alarmów są odświeżane
+co pięć minut i po poleceniu z HA; bieżące komunikaty i alarmy przy każdym odczycie.
 
 ## Sprawność, moc odzysku i COP
 
@@ -194,6 +243,7 @@ obejmuje maksymalnie 16 rejestrów.
 | Objaw | Co sprawdzić |
 | --- | --- |
 | Integracja nie uruchamia się | Host, port, slave ID, parametry RTU i dostępność bramki; HA automatycznie ponawia konfigurację |
+| Brak integracji na liście po instalacji | Pełny restart HA, odświeżenie interfejsu, bezpośredni formularz oraz obecność `/config/custom_components/thessla_green/manifest.json` |
 | Encje są niedostępne | Połączenie, logi integracji, dostępność czujnika lub wyposażenia |
 | Brakuje harmonogramów lub szczegółowych alarmów | Włącz odpowiednie encje na karcie urządzenia |
 | Nie można potwierdzić wymiany filtra | Ustaw właściwy system AFC w opcjach; przyciski dotyczą filtrów bez AFC |
@@ -235,7 +285,7 @@ przez rzeczywistego klienta pymodbus. CI sprawdza minimalne i aktualne wersje za
 
 ## Status projektu i źródła
 
-Aktualne wydanie: **v0.3.1**. Archiwum integracji i plik `SHA256SUMS` są dostępne
+Aktualne wydanie: **v0.4.0**. Archiwum integracji i plik `SHA256SUMS` są dostępne
 na stronie wydania. Dokumentacja i pliki wydania pochodzą z tego samego tagu.
 
 Zmiany oczekujące na publikację są oznaczone jako **Unreleased** w
@@ -264,7 +314,7 @@ Wersja w `manifest.json` i sekcja w changelogu muszą odpowiadać tagowi `vX.Y.Z
 Lokalne pakowanie i kontrolę wersji wykonasz poleceniem:
 
 ```bash
-python scripts/build_release.py v0.3.1 --output-dir dist
+python scripts/build_release.py v0.4.0 --output-dir dist
 ```
 
 Wypchnięcie tagu uruchamia workflow **Release**. Po przejściu testów i walidacji

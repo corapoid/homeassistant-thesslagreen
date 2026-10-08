@@ -80,7 +80,7 @@ async def test_controls_write_and_refresh(coordinator, entry):
     coordinator.controller.write_register.assert_awaited_with(16, 1)
     await power.async_turn_off()
     coordinator.controller.write_register.assert_awaited_with(16, 0)
-    mode, kind, regulation = particle_entities("select", coordinator, entry)
+    mode, kind, regulation = particle_entities("select", coordinator, entry)[:3]
     assert mode.current_option == "Manualny"
     await mode.async_select_option("Automatyczny")
     coordinator.controller.write_register.assert_awaited_with(17, 1)

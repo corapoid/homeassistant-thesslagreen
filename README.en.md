@@ -42,12 +42,18 @@ duct heaters and AFC depends on the installation.
 4. Open **Settings → Devices & services → Add integration**.
 5. Search for **Thessla Green**, select a profile and enter the connection details.
 
+You can also [open the Thessla Green configuration form directly](https://my.home-assistant.io/redirect/config_flow_start/?domain=thessla_green).
+If it is missing from the list after restarting HA, hard-refresh the browser
+(`Ctrl+Shift+R` or `Cmd+Shift+R`). In the mobile app, reopen the app and clear
+the frontend cache if necessary. The integration is named **Thessla Green**,
+not the repository name.
+
 ### Manual installation
 
 1. Download or clone the repository:
 
    ```bash
-   git clone --branch v0.3.1 https://github.com/corapoid/homeassistant-thesslagreen.git
+   git clone --branch v0.4.0 https://github.com/corapoid/homeassistant-thesslagreen.git
    ```
 
 2. Copy **only** `custom_components/thessla_green` from the repository into your
@@ -160,6 +166,11 @@ Supported features:
 - Absolute target **0–200 µg/m³** and reference concentrations **10–300 µg/m³**.
 - Filter pressure drops, wear, blocked filtration and alarms.
 - From firmware **3.4.0**, missing work permission and missing-filter alarms.
+- The `slave_screen` message, its raw code and filter-procedure state.
+- Individual alarm codes, including **S116**, and an active-alarm summary.
+- Measured controller firmware, serial number and read-only RTU-port settings.
+- The panel's relative target, clock/alarm-record words and raw controller-name
+  and firmware-compilation registers.
 
 Sensors report the **selected particle type**, identified by `particle_type`.
 Default device measurement intervals are **10 seconds** in automatic mode and
@@ -167,6 +178,42 @@ Default device measurement intervals are **10 seconds** in automatic mode and
 
 Set the relative percentage target on the Particle+ panel. Automatic mode may
 be unavailable if PmSensor OUT fails.
+
+### Particle+ filter check and messages
+
+**Particle+ Uruchom kontrolę filtrów** writes **3** to **42 / 0x002A**, without
+a service code. It is unavailable while a check/calibration is running. Separate
+entities configure the automatic check's weekday and time; Particle+ packs hour
+and minute into two byte fields in register 44.
+
+Observe **Particle+ Komunikat kontroli filtrów** and **Particle+ Kod komunikatu
+filtrów**, reading **4398 / 0x112E**:
+
+| Code | Meaning |
+| --- | --- |
+| `0x31` | New HEPA filter detected |
+| `0x39` | Higher-than-original HEPA resistance; YES/NO decision required |
+| `0x43` | Filter check running |
+| `0x47` | Flow error during filter check |
+| `0x48` | Filter-check procedure completed |
+| `0x4A` | Cannot start the check; inspect alarms |
+
+All manufacturer-documented message codes are decoded. Unknown codes retain
+their raw value. A completion message **does not imply that S116 has cleared**;
+the individual S116 alarm entity reports that bit independently.
+
+Reads never acknowledge messages. The explicit acknowledgement button writes
+`0` to `4398` and the next queued message is read again. Higher-resistance
+questions require the separate **TAK / NIE** buttons, writing the decision to
+**4400 / 0x1130**. Critical missing/invalid-filter messages cannot be acknowledged
+with the acknowledgement button.
+
+User reset buttons apply only to S2 and S255; there is no forced S116 reset.
+Detailed alarm records and UART settings are disabled by default in HA.
+Packed alarm dates, clock words and compilation fields are exposed as raw
+diagnostics rather than guessing undocumented date encodings. Alarm records
+refresh every five minutes and after HA commands; current alarms/messages
+refresh on every poll.
 
 ## Efficiency, recovery power and COP
 
@@ -188,6 +235,7 @@ Modbus commands are serialized, and a single request covers at most 16 registers
 | Symptom | Check |
 | --- | --- |
 | Setup fails | Host, port, slave ID, RTU settings and gateway availability; HA automatically retries setup |
+| Integration missing after installation | Full HA restart, frontend refresh, direct configuration form and `/config/custom_components/thessla_green/manifest.json` |
 | Entities are unavailable | Connection, integration logs, sensor/equipment availability |
 | Missing schedules or detailed alarms | Enable the required entities from the device page |
 | Filter replacement cannot be confirmed | Configure the installed AFC system; buttons apply to non-AFC filters |
@@ -229,7 +277,7 @@ pymodbus client. CI checks minimum and current dependency versions.
 
 ## Project status and references
 
-Current release: **v0.3.1**. The release page provides the integration archive
+Current release: **v0.4.0**. The release page provides the integration archive
 and `SHA256SUMS`. Documentation and release files come from the same tag.
 
 Changes awaiting publication are marked **Unreleased** in [CHANGELOG.md](CHANGELOG.md).
@@ -258,7 +306,7 @@ The manifest version and a changelog section must match the `vX.Y.Z` tag.
 Build and validate release artifacts locally with:
 
 ```bash
-python scripts/build_release.py v0.3.1 --output-dir dist
+python scripts/build_release.py v0.4.0 --output-dir dist
 ```
 
 Pushing a tag runs the **Release** workflow. Tests and HACS/hassfest validation

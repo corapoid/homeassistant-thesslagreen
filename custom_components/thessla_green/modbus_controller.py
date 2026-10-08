@@ -19,6 +19,7 @@ from .airpack4_registers import (
     REQUIRED_HOLDING, OPTIONAL_HOLDING, SCHEDULE_REGISTERS,
     INPUT_REGISTERS, COIL_REGISTERS, DISCRETE_REGISTERS, register_blocks,
 )
+from .particle_registers import OPTIONAL_BLOCKS, MODERN_BLOCKS, HISTORY_BLOCKS, MODERN_HISTORY_BLOCKS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,6 +59,8 @@ class ThesslaGreenModbusController:
         self._unsupported_registers = set()
         self._schedule_cache = {}
         self._schedule_timestamp = None
+        self._particle_history_cache = {}
+        self._particle_history_timestamp = None
         self._holding_blocks = [
             (256, 2), (4192, 1), (4198, 1), (4208, 3), (4224, 1),
             (4320, 1), (4387, 1), (8192, 2), (8208, 1), (8222, 2),
@@ -113,11 +116,8 @@ class ThesslaGreenModbusController:
                     values = await self._read_values(read_method, start, count, kind, field)
                     target.update({start + index: bool(value) if field == "bits" else value
                                    for index, value in enumerate(values)})
-            if (self._device_type == DEVICE_PARTICLE
-                    and data.holding[PARTICLE_FIRMWARE_REGISTER] >= PARTICLE_EXTENDED_ALARMS_VERSION):
-                data.holding[98] = (await self._read_values(
-                    self._client.read_holding_registers, 98, 1, "extended Particle+ alarms",
-                ))[0]
+            if self._device_type == DEVICE_PARTICLE:
+                await self._fetch_particle_information(data, now)
             if self._last_update_timestamp is not None:
                 data.update_interval = round(now - self._last_update_timestamp, 2)
             self._last_update_timestamp = now
@@ -132,6 +132,7 @@ class ThesslaGreenModbusController:
                     raise ControllerException(f"Failed to write register {address} with value {value}")
                 _LOGGER.debug("Wrote register %d = %s", address, value)
                 self._schedule_timestamp = None
+                self._particle_history_timestamp = None
                 return True
             except ControllerException:
                 raise
@@ -216,6 +217,28 @@ class ThesslaGreenModbusController:
             self._schedule_cache = schedule
             self._schedule_timestamp = now
         data.holding.update(self._schedule_cache)
+
+    async def _fetch_particle_information(self, data, now):
+        modern = data.holding[PARTICLE_FIRMWARE_REGISTER] >= PARTICLE_EXTENDED_ALARMS_VERSION
+        # The RTC must be read as one four-word snapshot, even when unsupported.
+        if not any(("holding registers", address) in self._unsupported_registers for address in range(4)):
+            try:
+                clock = await self._read_values(self._client.read_holding_registers, 0, 4, "holding registers")
+            except UnsupportedRegister:
+                self._unsupported_registers.update(("holding registers", address) for address in range(4))
+            else:
+                data.holding.update(enumerate(clock))
+        for start, count in OPTIONAL_BLOCKS + (MODERN_BLOCKS if modern else ()):
+            await self._read_optional_block(self._client.read_holding_registers, start, count,
+                                            data.holding, "holding registers")
+        if self._particle_history_timestamp is None or now - self._particle_history_timestamp >= 300:
+            history = {}
+            for start, count in HISTORY_BLOCKS + (MODERN_HISTORY_BLOCKS if modern else ()):
+                await self._read_optional_block(self._client.read_holding_registers, start, count,
+                                                history, "holding registers")
+            self._particle_history_cache = history
+            self._particle_history_timestamp = now
+        data.holding.update(self._particle_history_cache)
 
     async def _ensure_connected(self):
         if self._client.connected:
